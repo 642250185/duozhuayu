@@ -7,7 +7,7 @@ const sleep = require('js-sleep/js-sleep');
 const {getHeader} = require('./util/duozhuayuUtil');
 const {formatDate} = require('./util/dateUtil');
 const xlsx = require('node-xlsx').default;
-const obj  = xlsx.parse('./file/dzy/豆瓣 8.5.xlsx');
+const obj  = xlsx.parse('./file/豆瓣 8.5.xlsx');
 const {domain, booksDataPath, exportPath, partBooksDataPath} = config.dzy;
 
 const booksList = [];

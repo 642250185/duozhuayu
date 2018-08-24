@@ -3,11 +3,13 @@ const _path = require('path');
 const fs = require('fs-extra');
 const request = require('superagent');
 const config = require('./config/index');
-const sleep = require('js-sleep/js-sleep');
-const {getHeader} = require('./util/duozhuayuUtil');
-const {formatDate} = require('./util/dateUtil');
 const xlsx = require('node-xlsx').default;
-const obj  = xlsx.parse('./file/豆瓣 8.5.xlsx');
+const sleep = require('js-sleep/js-sleep');
+const {changeIP} = require('./util/iputil');
+const obj  = xlsx.parse('./file/特价区.xlsx');
+const {formatDate} = require('./util/dateUtil');
+const {getHeader} = require('./util/duozhuayuUtil');
+
 const {domain, booksDataPath, exportPath, partBooksDataPath} = config.dzy;
 
 const booksList = [];
@@ -57,6 +59,7 @@ const getBookSalesTotal = async (book, page, sumList) =>
         for(let obj of data){
             soldBooksCountList.push(obj.soldBooksCount);
         }
+        await changeIP();
         sumList = sumList.concat(soldBooksCountList);
         if(paging.next){
             count++;

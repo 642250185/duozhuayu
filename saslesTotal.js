@@ -6,7 +6,7 @@ const config = require('./config/index');
 const xlsx = require('node-xlsx').default;
 const sleep = require('js-sleep/js-sleep');
 const {changeIP} = require('./util/iputil');
-const obj  = xlsx.parse('./file/特价区.xlsx');
+const obj  = xlsx.parse('./file/手慢无.xlsx');
 const {formatDate} = require('./util/dateUtil');
 const {getHeader} = require('./util/duozhuayuUtil');
 
@@ -43,15 +43,14 @@ console.info(`分组: ${booksObjList[0].group} 类别: ${booksObjList[0].categro
 })();
 
 let count = 0, requestNumber = 0;
-const getBookSalesTotal = async (book, page, sumList) =>
-{
+const getBookSalesTotal = async (book, page, sumList) => {
     try {
         let path = page;
         if(count === 0){
             sumList = [];
             path = `${domain}/api/books/${book.id}/sellers`;
         }
-        console.info(`请求次数: ${++requestNumber} bookId:　${book.id} >> ${path}`);
+        console.info(`请求次数: ${++requestNumber}`);
         let result = await request.get(path).set(getHeader());
         result = JSON.parse(result.text);
         const {paging, data} = result;
@@ -63,6 +62,7 @@ const getBookSalesTotal = async (book, page, sumList) =>
         sumList = sumList.concat(soldBooksCountList);
         if(paging.next){
             count++;
+            console.info(`第 ${count} 页`);
             const page = paging.next;
             return await getBookSalesTotal(book, page, sumList);
         } else {
@@ -84,13 +84,12 @@ const getBookSalesTotal = async (book, page, sumList) =>
     }
 };
 
-const getAllBookSalesTotal = async () =>
-{
+const getAllBookSalesTotal = async () => {
     try {
         let count = 0;
         for(let book of booksObjList){
+            console.info(`第 ${++count} 本, bookId: ${book.id}, title: ${book.title}`);
             const _book = await getBookSalesTotal(book);
-            console.info(`第 ${++count} 本, bookId: ${book.id}, title: ${book.title} _book: %j`, _book);
             booksList.push(_book);
             if(_.isEmpty(_book)){
                 console.error('运行结束...');
@@ -104,8 +103,7 @@ const getAllBookSalesTotal = async () =>
     }
 };
 
-const getInterruptedBook = async () =>
-{
+const getInterruptedBook = async () => {
     try {
         const interruptedBook = JSON.parse(fs.readFileSync(partBooksDataPath));
         return interruptedBook.id;
@@ -115,8 +113,7 @@ const getInterruptedBook = async () =>
     }
 };
 
-const getSurplusBooksObjList = async (interruptedId, bookArray) =>
-{
+const getSurplusBooksObjList = async (interruptedId, bookArray) => {
     try {
         let start = false, result = [];
         for(let book of bookArray){
@@ -135,8 +132,7 @@ const getSurplusBooksObjList = async (interruptedId, bookArray) =>
     }
 };
 
-const exportExcel = async (list) =>
-{
+const exportExcel = async (list) => {
     try {
         if(!list){
             console.info('开始采集数据......');
@@ -174,7 +170,6 @@ const exportExcel = async (list) =>
             dzyBookList.push(row);
         }
         const filename = `${exportPath}/${booksObjList[0].categroyName}.xlsx`;
-        console.info('dzyBookList.length: ', dzyBookList.length);
         fs.writeFileSync(filename, xlsx.build([
             {name: '多抓鱼书籍销售总量', data: dzyBookList},
         ]));

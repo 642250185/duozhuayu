@@ -6,7 +6,7 @@ const config = require('./config/index');
 const xlsx = require('node-xlsx').default;
 const sleep = require('js-sleep/js-sleep');
 const {changeIP} = require('./util/iputil');
-const obj  = xlsx.parse('./file/手慢无.xlsx');
+const obj  = xlsx.parse('./file/旅行.xlsx');
 const {formatDate} = require('./util/dateUtil');
 const {getHeader} = require('./util/duozhuayuUtil');
 
@@ -14,8 +14,7 @@ const {domain, booksDataPath, exportPath, partBooksDataPath} = config.dzy;
 
 const booksList = [];
 let booksObjList = [];
-Object.keys(obj).forEach(function(key)
-{
+Object.keys(obj).forEach(function(key) {
     obj[key].data.forEach(function(item){
         booksObjList.push({
             groupId     : item[0],
@@ -50,7 +49,7 @@ const getBookSalesTotal = async (book, page, sumList) => {
             sumList = [];
             path = `${domain}/api/books/${book.id}/sellers`;
         }
-        console.info(`请求次数: ${++requestNumber}`);
+        console.info(`请求次数: ${++requestNumber} path: ${path}`);
         let result = await request.get(path).set(getHeader());
         result = JSON.parse(result.text);
         const {paging, data} = result;
@@ -58,8 +57,13 @@ const getBookSalesTotal = async (book, page, sumList) => {
         for(let obj of data){
             soldBooksCountList.push(obj.soldBooksCount);
         }
-        await changeIP();
+        // await changeIP();
+        await sleep(1000 * 2);
         sumList = sumList.concat(soldBooksCountList);
+        if(_.isEmpty(paging)){
+            console.warn('没有数据。');
+            return;
+        }
         if(paging.next){
             count++;
             console.info(`第 ${count} 页`);
@@ -84,7 +88,8 @@ const getBookSalesTotal = async (book, page, sumList) => {
     }
 };
 
-const getAllBookSalesTotal = async () => {
+const getAllBookSalesTotal = async () =>
+{
     try {
         let count = 0;
         for(let book of booksObjList){
@@ -92,8 +97,7 @@ const getAllBookSalesTotal = async () => {
             const _book = await getBookSalesTotal(book);
             booksList.push(_book);
             if(_.isEmpty(_book)){
-                console.error('运行结束...');
-                return;
+                continue;
             }
         }
         return booksList;
@@ -103,7 +107,8 @@ const getAllBookSalesTotal = async () => {
     }
 };
 
-const getInterruptedBook = async () => {
+const getInterruptedBook = async () =>
+{
     try {
         const interruptedBook = JSON.parse(fs.readFileSync(partBooksDataPath));
         return interruptedBook.id;
@@ -113,7 +118,8 @@ const getInterruptedBook = async () => {
     }
 };
 
-const getSurplusBooksObjList = async (interruptedId, bookArray) => {
+const getSurplusBooksObjList = async (interruptedId, bookArray) =>
+{
     try {
         let start = false, result = [];
         for(let book of bookArray){
@@ -132,7 +138,8 @@ const getSurplusBooksObjList = async (interruptedId, bookArray) => {
     }
 };
 
-const exportExcel = async (list) => {
+const exportExcel = async (list) =>
+{
     try {
         if(!list){
             console.info('开始采集数据......');
@@ -174,7 +181,6 @@ const exportExcel = async (list) => {
             {name: '多抓鱼书籍销售总量', data: dzyBookList},
         ]));
         console.log(`爬取结束, 成功导出文件: ${filename}`);
-        return;
     } catch (e) {
         console.error('Export: ', e);
         return e;
